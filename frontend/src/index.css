@@ -1,60 +1,79 @@
 @import "tailwindcss";
 
+/* 
+  Professional Financial Dashboard Design System
+  Theme: Dark Institutional Trading Terminal
+*/
+
 @theme {
-  --color-terminal-bg: #131722;
-  --color-terminal-surface: #1e222d;
-  --color-terminal-card: #2a2e39;
-  --color-terminal-border: #2a2e39;
-  --color-terminal-border-hover: #363c4e;
-  --color-terminal-text: #d1d4dc;
-  --color-terminal-text-muted: #787b86;
-  --color-terminal-text-dim: #434651;
-  --color-accent-blue: #2962ff;
-  --color-accent-cyan: #2962ff;
-  --color-accent-purple: #6c5ce7;
-  --color-gain: #089981;
-  --color-loss: #f23645;
-  --color-gain-dim: rgba(34, 197, 94, 0.15);
-  --color-loss-dim: rgba(239, 68, 68, 0.15);
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --color-bg: #0f172a;
+  --color-card: #1e293b;
+  --color-card-border: #334155;
+  --color-primary: #3b82f6;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-dim: #64748b;
+  
+  --shadow-terminal: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-glow: 0 0 15px -3px var(--color-primary);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  body {
+    @apply bg-bg text-text-primary font-sans antialiased overflow-hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Custom Scrollbar for Institutional Feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-card-border rounded-full hover:bg-text-dim transition-colors;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4 {
+    @apply font-semibold tracking-tight;
+  }
 }
 
-body {
-  font-family: var(--font-sans);
-  background-color: var(--color-terminal-bg);
-  color: var(--color-terminal-text);
-  overflow: hidden;
-  height: 100vh;
+@layer components {
+  .terminal-card {
+    @apply bg-card border border-card-border rounded-lg shadow-terminal overflow-hidden;
+  }
+
+  .terminal-btn-primary {
+    @apply bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded font-semibold text-sm transition-all active:scale-95 shadow-lg shadow-blue-500/20;
+  }
+
+  .terminal-btn-outline {
+    @apply border border-card-border hover:bg-card-border text-text-primary px-4 py-2 rounded font-semibold text-sm transition-all active:scale-95;
+  }
+
+  .terminal-input {
+    @apply bg-bg border border-card-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary transition-all placeholder:text-text-dim;
+  }
 }
 
-#root {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+@layer utilities {
+  .glass {
+    @apply bg-card/80 backdrop-blur-md border border-white/5;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-terminal-bg);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-terminal-border-hover);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-terminal-text-dim);
-}
-
-input, select, textarea {
-  font-family: var(--font-sans);
+@keyframes glow {
+  from { box-shadow: 0 0 5px -2px var(--color-primary); }
+  to { box-shadow: 0 0 15px -1px var(--color-primary); }
 }

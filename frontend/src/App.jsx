@@ -21,8 +21,8 @@ function AppContent() {
   // Loading spinner while checking session
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-terminal-bg">
-        <div className="w-10 h-10 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+      <div className="flex items-center justify-center h-screen bg-bg">
+        <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
@@ -32,64 +32,96 @@ function AppContent() {
     return <AuthPage />;
   }
 
-  // Authenticated → show terminal
+  const handleTradeExecuted = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-terminal-bg text-terminal-text overflow-hidden selection:bg-accent-cyan/30">
-      <TopNav activeTab={activeTab} setActiveTab={setActiveTab} user={user} onLogout={logout} />
+    <div className="flex flex-col h-screen bg-bg text-text-primary overflow-hidden">
+      <TopNav 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        user={user} 
+        onLogout={logout} 
+      />
 
-      {activeTab === 'terminal' && (
-        <div className="flex flex-1 overflow-hidden p-1.5 gap-1.5 bg-black/40">
-          {/* Left Sidebar – Watchlist */}
-          <aside className="w-[280px] border border-terminal-border rounded flex flex-col bg-terminal-surface shadow-sm">
-            <Watchlist activeSymbol={activeSymbol} onSelect={setActiveSymbol} />
-          </aside>
+      <main className="flex flex-1 overflow-hidden">
+        {activeTab === 'terminal' && (
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left Sidebar: Watchlist */}
+            <aside className="w-[260px] border-r border-card-border flex flex-col bg-bg hidden lg:flex">
+              <Watchlist activeSymbol={activeSymbol} onSelect={setActiveSymbol} />
+            </aside>
 
-          {/* Center – Chart + Bottom History */}
-          <main className="flex-1 flex flex-col overflow-hidden gap-1.5">
-            <div className="flex-1 border border-terminal-border rounded bg-terminal-surface shadow-sm flex flex-col overflow-hidden">
-              <ChartPanel symbol={activeSymbol} refreshTrigger={refreshKey} />
-            </div>
-            <div className="h-64 border border-terminal-border rounded bg-terminal-surface shadow-sm flex flex-col overflow-hidden">
-              <TradeHistory refreshTrigger={refreshKey} />
-            </div>
-          </main>
+            {/* Center: Chart + Bottom Activity */}
+            <section className="flex-1 flex flex-col overflow-hidden bg-black/10">
+              <div className="flex-1 overflow-hidden p-4">
+                 <div className="h-full terminal-card flex flex-col">
+                    <ChartPanel symbol={activeSymbol} refreshTrigger={refreshKey} />
+                 </div>
+              </div>
+              
+              <div className="h-72 border-t border-card-border bg-bg flex flex-col overflow-hidden">
+                <TradeHistory refreshTrigger={refreshKey} />
+              </div>
+            </section>
 
-          {/* Right Sidebar – Trade / Portfolio */}
-          <aside className="w-[340px] border border-terminal-border rounded flex flex-col bg-terminal-surface shadow-sm">
-            <div className="flex border-b border-terminal-border">
-              <button
-                onClick={() => setRightTab('trade')}
-                className={`flex-1 py-2.5 text-xs font-semibold tracking-wider uppercase transition-colors ${
-                  rightTab === 'trade'
-                    ? 'text-accent-cyan border-b-2 border-accent-cyan bg-terminal-card'
-                    : 'text-terminal-text-muted hover:text-terminal-text'
-                }`}
-              >
-                Trade
-              </button>
-              <button
-                onClick={() => setRightTab('portfolio')}
-                className={`flex-1 py-2.5 text-xs font-semibold tracking-wider uppercase transition-colors ${
-                  rightTab === 'portfolio'
-                    ? 'text-accent-cyan border-b-2 border-accent-cyan bg-terminal-card'
-                    : 'text-terminal-text-muted hover:text-terminal-text'
-                }`}
-              >
-                Portfolio
-              </button>
-            </div>
-            {rightTab === 'trade' ? (
-              <TradePanel symbol={activeSymbol} refreshTrigger={refreshKey} onTrade={() => setRefreshKey(k => k + 1)} />
-            ) : (
-              <PortfolioPanel refreshTrigger={refreshKey} />
-            )}
-          </aside>
-        </div>
-      )}
+            {/* Right Panel: Trading & Portfolio */}
+            <aside className="w-[320px] border-l border-card-border flex flex-col bg-bg overflow-y-auto">
+              <div className="flex border-b border-card-border bg-card/30">
+                <button
+                  onClick={() => setRightTab('trade')}
+                  className={`flex-1 py-3 text-[11px] font-bold tracking-widest uppercase transition-all ${
+                    rightTab === 'trade'
+                      ? 'text-primary border-b-2 border-primary bg-primary/5'
+                      : 'text-text-dim hover:text-text-secondary'
+                  }`}
+                >
+                  Execution
+                </button>
+                <button
+                  onClick={() => setRightTab('portfolio')}
+                  className={`flex-1 py-3 text-[11px] font-bold tracking-widest uppercase transition-all ${
+                    rightTab === 'portfolio'
+                      ? 'text-primary border-b-2 border-primary bg-primary/5'
+                      : 'text-text-dim hover:text-text-secondary'
+                  }`}
+                >
+                  Exposure
+                </button>
+              </div>
+              
+              <div className="flex-1">
+                {rightTab === 'trade' ? (
+                  <TradePanel 
+                    symbol={activeSymbol} 
+                    refreshTrigger={refreshKey} 
+                    onTrade={handleTradeExecuted} 
+                  />
+                ) : (
+                  <PortfolioPanel refreshTrigger={refreshKey} />
+                )}
+              </div>
+            </aside>
+          </div>
+        )}
 
-      {activeTab === 'analytics' && <PortfolioAnalytics refreshTrigger={refreshKey} />}
-      {activeTab === 'learning' && <LearningModule />}
-      {activeTab === 'ai' && <AIInsights symbol={activeSymbol} />}
+        {activeTab === 'analytics' && (
+          <div className="flex-1 overflow-y-auto bg-bg p-6">
+            <PortfolioAnalytics refreshTrigger={refreshKey} />
+          </div>
+        )}
+
+        {activeTab === 'learning' && (
+          <LearningModule />
+        )}
+
+        {activeTab === 'ai' && (
+          <div className="flex-1 overflow-hidden">
+            <AIInsights symbol={activeSymbol} />
+          </div>
+        )}
+      </main>
     </div>
   );
 }

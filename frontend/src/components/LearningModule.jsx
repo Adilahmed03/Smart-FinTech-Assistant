@@ -7,7 +7,10 @@ import {
   ArrowLeft, 
   Loader2, 
   HelpCircle,
-  Hash
+  Hash,
+  Star,
+  Activity,
+  Award
 } from 'lucide-react';
 import { learningAPI } from '../api';
 
@@ -29,7 +32,7 @@ export default function LearningModule() {
       const res = await learningAPI.getLessons();
       setLessons(res.data.lessons);
     } catch (err) {
-      console.error("Failed to fetch lessons", err);
+      console.error("Lesson fetch error", err);
     } finally {
       setLoading(false);
     }
@@ -54,7 +57,7 @@ export default function LearningModule() {
       setQuizResult(res.data);
       setMode('result');
     } catch (err) {
-      console.error("Failed to submit quiz", err);
+      console.error("Quiz submission error", err);
     } finally {
       setSubmitting(false);
     }
@@ -62,46 +65,53 @@ export default function LearningModule() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#131722]">
-        <Loader2 className="animate-spin text-[#2962ff]" size={32} />
+      <div className="flex-1 flex items-center justify-center bg-bg">
+        <Loader2 className="animate-spin text-primary opacity-50" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#131722] p-6">
+    <div className="flex-1 flex flex-col overflow-hidden bg-bg p-8 animate-in fade-in duration-700">
       {/* List Mode */}
       {mode === 'list' && (
-        <div className="max-w-4xl mx-auto w-full">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-[#d1d4dc] mb-2 flex items-center gap-3">
-              <BookOpen className="text-[#2962ff]" />
-              Institutional Learning Library
+        <div className="max-w-5xl mx-auto w-full">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-black text-text-primary mb-3 flex items-center justify-center gap-4 uppercase tracking-tighter">
+              <BookOpen className="text-primary" size={32} />
+              Educational Infrastructure
             </h2>
-            <p className="text-[#787b86] text-sm">Master the fundamentals of financial markets with structured lessons and assessments.</p>
+            <p className="text-text-dim text-sm font-bold uppercase tracking-[0.2em]">Institutional Grade Financial Literacy Program</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {lessons.map((lesson) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {lessons.map((lesson, idx) => (
               <div 
                 key={lesson.id}
                 onClick={() => handleSelectLesson(lesson)}
-                className="p-5 rounded-lg border border-[#2a2e39] bg-[#1e222d] hover:border-[#2962ff] transition-all cursor-pointer group"
+                className="terminal-card p-6 hover:border-primary/40 transition-all cursor-pointer group flex flex-col h-full bg-card/20"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded bg-[#2962ff]/10 flex items-center justify-center">
-                    <Hash size={18} className="text-[#2962ff]" />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 rounded bg-bg border border-card-border flex items-center justify-center group-hover:border-primary/30 transition-colors">
+                    <span className="text-[14px] font-black text-primary">0{idx + 1}</span>
                   </div>
-                  <ChevronRight size={18} className="text-[#787b86] group-hover:text-[#d1d4dc] transition-colors" />
+                  <ChevronRight size={18} className="text-text-dim group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
-                <h3 className="text-[15px] font-bold text-[#d1d4dc] mb-2">{lesson.title}</h3>
-                <p className="text-[12px] text-[#787b86] line-clamp-2 leading-relaxed">
+                <h3 className="text-lg font-black text-text-primary mb-3 tracking-tight group-hover:text-primary transition-colors uppercase">
+                   {lesson.title}
+                </h3>
+                <p className="text-[12px] text-text-dim line-clamp-3 leading-relaxed font-medium mb-6">
                   {lesson.explanation}
                 </p>
-                <div className="mt-4 flex items-center gap-2">
-                   <span className="text-[10px] uppercase font-bold text-[#089981] bg-[#089981]/10 px-2 py-0.5 rounded">
-                     {lesson.quiz.length} Questions
-                   </span>
+                <div className="mt-auto flex items-center justify-between border-t border-card-border/50 pt-4">
+                   <div className="flex items-center gap-1.5">
+                      <HelpCircle size={12} className="text-primary" />
+                      <span className="text-[10px] font-black uppercase text-text-dim tracking-widest">{lesson.quiz.length} Questions</span>
+                   </div>
+                   <div className="flex items-center gap-1.5">
+                      <Star size={12} className="text-secondary" />
+                      <span className="text-[10px] font-black uppercase text-text-dim tracking-widest">Entry Level</span>
+                   </div>
                 </div>
               </div>
             ))}
@@ -111,46 +121,53 @@ export default function LearningModule() {
 
       {/* Content Mode */}
       {mode === 'content' && selectedLesson && (
-        <div className="max-w-3xl mx-auto w-full flex flex-col h-full overflow-hidden">
+        <div className="max-w-4xl mx-auto w-full flex flex-col h-full overflow-hidden animate-in slide-in-from-right-4 duration-500">
           <button 
             onClick={() => setMode('list')}
-            className="flex items-center gap-2 text-[12px] text-[#787b86] hover:text-[#d1d4dc] mb-6 transition-colors"
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-dim hover:text-text-primary mb-8 transition-colors"
           >
-            <ArrowLeft size={14} /> Back to Library
+            <ArrowLeft size={14} /> Neural Library Exit
           </button>
           
-          <div className="flex-1 overflow-y-auto space-y-8 pr-4 custom-scrollbar">
-            <div>
-              <h1 className="text-3xl font-bold text-[#d1d4dc] mb-4">{selectedLesson.title}</h1>
-              <div className="h-1 w-20 bg-[#2962ff] rounded mb-6" />
-              <p className="text-[15px] text-[#b2b5be] leading-relaxed whitespace-pre-wrap">
+          <div className="flex-1 overflow-y-auto space-y-10 pr-6 custom-scrollbar">
+            <div className="relative">
+              <div className="absolute -left-10 top-0 text-[60px] font-black text-primary/5 select-none leading-none">01</div>
+              <h1 className="text-4xl font-black text-text-primary mb-6 tracking-tighter uppercase">{selectedLesson.title}</h1>
+              <div className="h-1.5 w-24 bg-primary rounded-full mb-8 shadow-lg shadow-primary/20" />
+              <p className="text-[16px] text-text-secondary leading-relaxed whitespace-pre-wrap font-medium">
                 {selectedLesson.explanation}
               </p>
             </div>
 
-            <div className="bg-[#1e222d] border border-[#2a2e39] rounded-xl p-6">
-              <h3 className="text-[14px] font-bold text-[#d1d4dc] mb-4 flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-[#089981]" />
-                Key Takeaways
+            <div className="terminal-card p-8 bg-card/40 border-primary/10">
+              <h3 className="text-[14px] font-black text-text-primary mb-6 flex items-center gap-3 uppercase tracking-widest">
+                <CheckCircle2 size={18} className="text-success" />
+                Syndicated Takeaways
               </h3>
-              <ul className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {selectedLesson.takeaways.map((point, i) => (
-                  <li key={i} className="flex gap-3 text-[13px] text-[#b2b5be] leading-relaxed">
-                    <span className="text-[#2962ff] font-bold">•</span>
-                    {point}
-                  </li>
+                  <div key={i} className="flex gap-4 p-4 rounded-lg bg-bg/50 border border-card-border/50">
+                    <span className="text-primary font-black text-sm">#</span>
+                    <p className="text-[13px] text-text-secondary leading-normal font-bold uppercase tracking-tight italic">
+                      {point}
+                    </p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-[#2a2e39] flex justify-end">
+          <div className="pt-8 mt-4 border-t border-card-border flex justify-between items-center bg-bg">
+             <div className="flex items-center gap-3">
+                <Activity size={16} className="text-secondary animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-widest text-text-dim">Ready for Verification?</span>
+             </div>
             <button 
               onClick={startQuiz}
-              className="px-6 py-2.5 rounded bg-[#2962ff] text-white text-[13px] font-bold hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-lg shadow-blue-600/20"
+              className="px-8 py-3.5 rounded bg-primary text-white text-[12px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all flex items-center gap-3 shadow-xl shadow-primary/20 active:scale-95"
             >
-              Take Assessment
-              <ChevronRight size={16} />
+              Initialize Assessment
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -158,31 +175,34 @@ export default function LearningModule() {
 
       {/* Quiz Mode */}
       {mode === 'quiz' && selectedLesson && (
-        <div className="max-w-2xl mx-auto w-full flex flex-col h-full">
-           <div className="mb-8">
+        <div className="max-w-3xl mx-auto w-full flex flex-col h-full animate-in slide-in-from-right-4 duration-500">
+           <div className="mb-10">
              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] uppercase font-bold text-[#787b86] tracking-widest">
-                  Assessment: {selectedLesson.title}
+                <span className="text-[11px] uppercase font-black text-text-dim tracking-[0.3em]">
+                  Module: {selectedLesson.title}
                 </span>
-                <span className="text-[11px] font-bold text-[#2962ff]">
-                   Progress: {quizAnswers.filter(a => a !== null).length}/{selectedLesson.quiz.length}
+                <span className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">
+                   Syncing: {quizAnswers.filter(a => a !== null).length} / {selectedLesson.quiz.length}
                 </span>
              </div>
-             <div className="h-1.5 w-full bg-[#2a2e39] rounded-full overflow-hidden">
+             <div className="h-2 w-full bg-card rounded-full overflow-hidden border border-card-border">
                 <div 
-                  className="h-full bg-[#2962ff] transition-all duration-300" 
+                  className="h-full bg-primary transition-all duration-700 shadow-lg shadow-primary/20" 
                   style={{ width: `${(quizAnswers.filter(a => a !== null).length / selectedLesson.quiz.length) * 100}%` }}
                 />
              </div>
            </div>
 
-           <div className="flex-1 overflow-y-auto space-y-10 pr-4">
+           <div className="flex-1 overflow-y-auto space-y-12 pr-6 custom-scrollbar pb-10">
               {selectedLesson.quiz.map((q, qIdx) => (
-                <div key={qIdx} className="space-y-4">
-                  <h4 className="text-[16px] font-bold text-[#d1d4dc]">
-                    {qIdx + 1}. {q.question}
-                  </h4>
-                  <div className="space-y-2">
+                <div key={qIdx} className="space-y-6">
+                  <div className="flex gap-4">
+                     <span className="text-2xl font-black text-primary opacity-20">0{qIdx + 1}</span>
+                     <h4 className="text-[18px] font-black text-text-primary tracking-tight leading-tight uppercase">
+                       {q.question}
+                     </h4>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 ml-12">
                     {q.options.map((opt, oIdx) => (
                       <button
                         key={oIdx}
@@ -191,10 +211,10 @@ export default function LearningModule() {
                           newAns[qIdx] = oIdx;
                           setQuizAnswers(newAns);
                         }}
-                        className={`w-full text-left px-5 py-4 rounded border text-[13px] transition-all ${
+                        className={`w-full text-left px-6 py-4 rounded-lg border text-sm font-bold uppercase tracking-wider transition-all ${
                           quizAnswers[qIdx] === oIdx
-                          ? 'border-[#2962ff] bg-[#2962ff]/10 text-[#d1d4dc]'
-                          : 'border-[#2a2e39] bg-[#1e222d] text-[#787b86] hover:border-[#434651]'
+                          ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/5'
+                          : 'border-card-border bg-card/30 text-text-dim hover:bg-card hover:text-text-secondary hover:translate-x-1'
                         }`}
                       >
                         {opt}
@@ -205,21 +225,21 @@ export default function LearningModule() {
               ))}
            </div>
 
-           <div className="pt-6 border-t border-[#2a2e39] flex justify-between items-center">
+           <div className="pt-8 mt-4 border-t border-card-border flex justify-between items-center bg-bg px-2">
               <button 
                 onClick={() => setMode('content')}
-                className="text-[12px] text-[#787b86] hover:text-[#d1d4dc] transition-colors"
+                className="text-[11px] font-black uppercase tracking-widest text-text-dim hover:text-text-primary transition-colors"
                 disabled={submitting}
               >
-                Review Content
+                Abort & Review
               </button>
               <button 
                 onClick={submitQuiz}
                 disabled={quizAnswers.includes(null) || submitting}
-                className="px-8 py-3 rounded bg-[#089981] text-white text-[13px] font-bold hover:bg-[#067d6a] transition-all disabled:opacity-30 flex items-center gap-2"
+                className="px-10 py-4 rounded bg-success text-white text-[12px] font-black uppercase tracking-[0.2em] hover:bg-green-600 transition-all disabled:opacity-30 flex items-center gap-3 shadow-xl shadow-success/20 active:scale-95"
               >
-                {submitting ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
-                Submit Answers
+                {submitting ? <Loader2 className="animate-spin" size={18} /> : <Award size={18} />}
+                Transmit Answers
               </button>
            </div>
         </div>
@@ -227,37 +247,39 @@ export default function LearningModule() {
 
       {/* Result Mode */}
       {mode === 'result' && quizResult && (
-        <div className="max-w-md mx-auto w-full flex flex-col items-center justify-center h-full text-center">
-          <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${
-            quizResult.percentage >= 70 ? 'bg-[#089981]/20' : 'bg-[#f23645]/20'
+        <div className="max-w-2xl mx-auto w-full flex flex-col items-center justify-center h-full text-center animate-in zoom-in-95 duration-700">
+          <div className={`w-32 h-32 rounded-full flex items-center justify-center mb-8 relative ${
+            quizResult.percentage >= 70 ? 'bg-success/10 border-2 border-success/30' : 'bg-danger/10 border-2 border-danger/30'
           }`}>
-             <Trophy size={48} className={quizResult.percentage >= 70 ? 'text-[#089981]' : 'text-[#f23645]'} />
+             <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${quizResult.percentage >= 70 ? 'bg-success' : 'bg-danger'}`} />
+             <Trophy size={56} className={quizResult.percentage >= 70 ? 'text-success' : 'text-danger'} />
           </div>
           
-          <h2 className="text-3xl font-bold text-[#d1d4dc] mb-2">
-            {quizResult.percentage >= 70 ? 'Mastery Achieved!' : 'Keep Learning!'}
+          <h2 className="text-4xl font-black text-text-primary mb-2 uppercase tracking-tighter">
+            {quizResult.percentage >= 70 ? 'Proficiency Verified' : 'Neural Gaps Detected'}
           </h2>
-          <p className="text-[#787b86] text-[14px] mb-8">
-            You scored {quizResult.score} out of {quizResult.total} correctly.
+          <p className="text-text-dim text-[14px] font-bold uppercase tracking-[0.2em] mb-10">
+            Performance Metrics: {quizResult.score} Accepted / {quizResult.total} Transmission
           </p>
 
-          <div className="w-full bg-[#1e222d] border border-[#2a2e39] rounded-xl p-6 mb-8">
-             <div className="text-5xl font-black text-[#2962ff] mb-2">{quizResult.percentage}%</div>
-             <div className="text-[11px] uppercase tracking-widest font-bold text-[#787b86]">Accuracy Score</div>
+          <div className="w-full max-w-sm terminal-card p-10 bg-card/30 mb-12 border-primary/20 relative">
+             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary px-3 py-1 rounded text-[10px] font-black text-white uppercase tracking-widest">Final Rank</div>
+             <div className="text-7xl font-black text-primary mb-3 tracking-tighter drop-shadow-2xl">{quizResult.percentage}%</div>
+             <div className="text-[12px] font-black text-text-dim uppercase tracking-[0.3em]">Mastery Coefficient</div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-6 w-full max-w-md">
             <button 
               onClick={() => setMode('list')}
-              className="px-6 py-2.5 rounded border border-[#363a45] text-[#d1d4dc] text-[13px] font-bold hover:bg-[#1e222d] transition-colors"
+              className="flex-1 terminal-btn-outline py-4 flex items-center justify-center gap-2"
             >
-              Browse Library
+              Module Library
             </button>
             <button 
               onClick={() => { setMode('content'); setQuizResult(null); }}
-              className="px-6 py-2.5 rounded bg-[#2962ff] text-white text-[13px] font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-blue-600/20"
+              className="flex-1 terminal-btn-primary py-4 flex items-center justify-center gap-2 bg-primary text-white"
             >
-              Review Lesson
+              Re-Analyze Lesson
             </button>
           </div>
         </div>

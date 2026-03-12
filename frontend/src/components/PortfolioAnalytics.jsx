@@ -4,10 +4,43 @@ import {
   PieChart, Pie, Cell, Legend,
   BarChart, Bar
 } from 'recharts';
-import { Loader2, TrendingUp, TrendingDown, PieChart as PieIcon, Activity } from 'lucide-react';
+import { 
+  Loader2, 
+  TrendingUp, 
+  TrendingDown, 
+  PieChart as PieIcon, 
+  Activity, 
+  Wallet, 
+  Target, 
+  ArrowUpRight, 
+  RefreshCw,
+  LayoutGrid
+} from 'lucide-react';
 import { tradingAPI } from '../api';
 
-const COLORS = ['#2962ff', '#089981', '#f23645', '#e91e63', '#ff9800', '#9c27b0'];
+const COLORS = ['#3b82f6', '#22c55e', '#ef4444', '#a855f7', '#f59e0b', '#06b6d4'];
+
+const MetricCard = ({ title, value, subtext, icon: Icon, colorClass, trend }) => (
+  <div className="terminal-card p-6 relative overflow-hidden group">
+    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-all duration-500 scale-150">
+       <Icon size={48} className={colorClass} />
+    </div>
+    <div className="relative z-10 flex flex-col gap-1">
+      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-dim">{title}</span>
+      <div className={`text-2xl font-black font-mono tracking-tighter ${colorClass}`}>
+        {value}
+      </div>
+      <div className="flex items-center gap-1.5 mt-1">
+         {trend && (
+           <span className={`text-[10px] font-black uppercase ${trend >= 0 ? 'text-success' : 'text-danger'}`}>
+             {trend >= 0 ? '+' : ''}{trend}%
+           </span>
+         )}
+         <span className="text-[10px] font-bold text-text-dim uppercase tracking-widest">{subtext}</span>
+      </div>
+    </div>
+  </div>
+);
 
 export default function PortfolioAnalytics({ refreshTrigger }) {
   const [data, setData] = useState(null);
@@ -18,7 +51,7 @@ export default function PortfolioAnalytics({ refreshTrigger }) {
       const res = await tradingAPI.getAnalytics();
       setData(res.data);
     } catch (err) {
-      console.error("Failed to fetch analytics", err);
+      console.error("Analytics fetch error", err);
     } finally {
       setLoading(false);
     }
@@ -30,8 +63,8 @@ export default function PortfolioAnalytics({ refreshTrigger }) {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#131722]">
-        <Loader2 className="animate-spin text-[#2962ff]" size={32} />
+      <div className="flex-1 flex items-center justify-center py-40">
+        <Loader2 className="animate-spin text-primary opacity-50" size={32} />
       </div>
     );
   }
@@ -39,8 +72,8 @@ export default function PortfolioAnalytics({ refreshTrigger }) {
   if (!data) return null;
 
   const { portfolio_value, profit_loss, return_percentage, asset_allocation, history } = data;
+  const totalInvested = asset_allocation.reduce((s, h) => s + h.cost, 0);
 
-  // Prepare history data for AreaChart
   const chartData = history.map(h => ({
     time: new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     value: h.value,
@@ -48,178 +81,211 @@ export default function PortfolioAnalytics({ refreshTrigger }) {
   }));
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#131722] p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
-        {/* Header Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-[#1e222d] border border-[#2a2e39] p-6 rounded-lg">
-            <div className="text-[11px] font-semibold text-[#787b86] uppercase tracking-wider mb-2">Total Equity</div>
-            <div className="text-3xl font-bold text-[#d1d4dc]">₹{portfolio_value.toLocaleString('en-IN')}</div>
-          </div>
-          <div className="bg-[#1e222d] border border-[#2a2e39] p-6 rounded-lg">
-            <div className="text-[11px] font-semibold text-[#787b86] uppercase tracking-wider mb-2">Total P&L</div>
-            <div className={`text-3xl font-bold flex items-center gap-2 ${profit_loss >= 0 ? 'text-[#089981]' : 'text-[#f23645]'}`}>
-              {profit_loss >= 0 ? <TrendingUp size={24} /> : <TrendingDown size={24} />}
-              ₹{Math.abs(profit_loss).toLocaleString('en-IN')}
-            </div>
-          </div>
-          <div className="bg-[#1e222d] border border-[#2a2e39] p-6 rounded-lg">
-            <div className="text-[11px] font-semibold text-[#787b86] uppercase tracking-wider mb-2">Return %</div>
-            <div className={`text-3xl font-bold ${return_percentage >= 0 ? 'text-[#089981]' : 'text-[#f23645]'}`}>
-              {return_percentage >= 0 ? '+' : ''}{return_percentage}%
-            </div>
-          </div>
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black tracking-tighter text-text-primary uppercase">Executive Dashboard</h1>
+          <p className="text-[10px] font-bold text-text-dim uppercase tracking-[0.3em]">Portfolio Intelligence Unit</p>
         </div>
+        <button 
+          onClick={fetchAnalytics}
+          className="terminal-btn-outline flex items-center gap-2"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          Refresh Dataset
+        </button>
+      </div>
+      
+      {/* Metric Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <MetricCard 
+          title="Total Equity" 
+          value={`₹${portfolio_value.toLocaleString('en-IN')}`}
+          subtext="Net Asset Value"
+          icon={Wallet}
+          colorClass="text-text-primary"
+        />
+        <MetricCard 
+          title="Session P&L" 
+          value={`₹${profit_loss.toLocaleString('en-IN')}`}
+          subtext="Realized/Unrealized"
+          icon={Activity}
+          colorClass={profit_loss >= 0 ? 'text-success' : 'text-danger'}
+          trend={return_percentage}
+        />
+        <MetricCard 
+          title="Deployed Capital" 
+          value={`₹${totalInvested.toLocaleString('en-IN')}`}
+          subtext="Total Cost Basis"
+          icon={Target}
+          colorClass="text-primary"
+        />
+        <MetricCard 
+          title="Performance" 
+          value={`${return_percentage >= 0 ? '+' : ''}${return_percentage}%`}
+          subtext="Alpha Relative"
+          icon={TrendingUp}
+          colorClass={return_percentage >= 0 ? 'text-success' : 'text-danger'}
+        />
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* Portfolio Value Over Time */}
-          <div className="bg-[#1e222d] border border-[#2a2e39] p-6 rounded-lg">
-            <div className="flex items-center gap-2 mb-6">
-              <Activity size={16} className="text-[#2962ff]" />
-              <h3 className="text-[14px] font-bold text-[#d1d4dc]">Account Value Trend</h3>
-            </div>
-            <div className="h-[300px] w-full">
-              <div className="h-full w-full opacity-90">
-                {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#2962ff" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#2962ff" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2a2e39" vertical={false} />
-                      <XAxis dataKey="time" stroke="#787b86" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#787b86" fontSize={10} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1e222d', border: '1px solid #2a2e39', borderRadius: '4px', fontSize: '12px' }}
-                        itemStyle={{ color: '#d1d4dc' }}
-                      />
-                      <Area type="monotone" dataKey="value" stroke="#2962ff" fillOpacity={1} fill="url(#colorValue)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-[#787b86] text-xs">Execute trades to see trend data</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Asset Allocation */}
-          <div className="bg-[#1e222d] border border-[#2a2e39] p-6 rounded-lg">
-            <div className="flex items-center gap-2 mb-6">
-              <PieIcon size={16} className="text-[#2962ff]" />
-              <h3 className="text-[14px] font-bold text-[#d1d4dc]">Asset Allocation</h3>
-            </div>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={asset_allocation}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    nameKey="symbol"
-                  >
-                    {asset_allocation.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1e222d', border: '1px solid #2a2e39', borderRadius: '4px', fontSize: '12px' }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', color: '#787b86' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Profit & Loss Trend */}
-          <div className="bg-[#1e222d] border border-[#2a2e39] p-6 rounded-lg lg:col-span-2">
-            <div className="flex items-center gap-2 mb-6">
-              <TrendingUp size={16} className="text-[#089981]" />
-              <h3 className="text-[14px] font-bold text-[#d1d4dc]">Net P&L Momentum</h3>
-            </div>
-            <div className="h-[250px] w-full">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2e39" vertical={false} />
-                    <XAxis dataKey="time" stroke="#787b86" fontSize={10} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#787b86" fontSize={10} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1e222d', border: '1px solid #2a2e39', borderRadius: '4px', fontSize: '12px' }}
-                    />
-                    <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? '#089981' : '#f23645'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-[#787b86] text-xs">Execute trades to see P&L momentum</div>
-              )}
-            </div>
-          </div>
-
-        </div>
-
-        {/* Holdings Report Table */}
-        <div className="bg-[#1e222d] border border-[#2a2e39] rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#2a2e39] flex items-center justify-between">
-            <h3 className="text-[14px] font-bold text-[#d1d4dc] flex items-center gap-2">
-              <Activity size={16} className="text-[#2962ff]" />
-              Detailed Holdings Report
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Value Momentum */}
+        <div className="terminal-card p-6 lg:col-span-2">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-[11px] font-black text-text-dim uppercase tracking-[0.2em] flex items-center gap-2">
+              <Activity size={12} className="text-primary" />
+              Equity Momentum
             </h3>
-            <span className="text-[11px] text-[#787b86] uppercase font-bold tracking-widest">
-              {asset_allocation.length} Active Positions
-            </span>
+            <div className="flex items-center gap-2">
+               <span className="w-2 h-2 rounded-full bg-primary" />
+               <span className="text-[9px] font-bold text-text-dim uppercase">Value (INR)</span>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[12px]">
-              <thead>
-                <tr className="bg-[#131722]/50 text-[#787b86] uppercase tracking-wider font-semibold">
-                  <th className="px-6 py-3 font-medium">Symbol</th>
-                  <th className="px-6 py-3 font-medium">Quantity</th>
-                  <th className="px-6 py-3 font-medium">Avg Cost</th>
-                  <th className="px-6 py-3 font-medium">Current Price</th>
-                  <th className="px-6 py-3 font-medium">Market Value</th>
-                  <th className="px-6 py-3 font-medium text-right">P&L</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#2a2e39]">
-                {asset_allocation.map((h, i) => (
-                  <tr key={i} className="hover:bg-[#131722]/30 transition-colors">
-                    <td className="px-6 py-4 font-bold text-[#d1d4dc]">{h.symbol}</td>
-                    <td className="px-6 py-4 text-[#d1d4dc]">{h.quantity}</td>
-                    <td className="px-6 py-4 text-[#d1d4dc]">₹{h.avg_buy_price.toLocaleString('en-IN')}</td>
-                    <td className="px-6 py-4 text-[#d1d4dc]">₹{h.current_price.toLocaleString('en-IN')}</td>
-                    <td className="px-6 py-4 text-[#d1d4dc]">₹{h.value.toLocaleString('en-IN')}</td>
-                    <td className={`px-6 py-4 text-right font-bold ${h.pnl >= 0 ? 'text-[#089981]' : 'text-[#f23645]'}`}>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(51, 65, 85, 0.2)" vertical={false} />
+                <XAxis 
+                  dataKey="time" 
+                  stroke="#64748b" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  dy={10}
+                />
+                <YAxis 
+                  stroke="#64748b" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  domain={['auto', 'auto']}
+                  tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}
+                  itemStyle={{ color: '#f8fafc' }}
+                  cursor={{ stroke: '#3b82f6', strokeWidth: 1 }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorValue)" 
+                  animationDuration={1500}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Sector Allocation */}
+        <div className="terminal-card p-6">
+          <h3 className="text-[11px] font-black text-text-dim uppercase tracking-[0.2em] flex items-center gap-2 mb-8">
+            <PieIcon size={12} className="text-secondary" />
+            Strategic Allocation
+          </h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={asset_allocation}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={95}
+                  paddingAngle={8}
+                  dataKey="value"
+                  nameKey="symbol"
+                  stroke="none"
+                  animationDuration={1500}
+                >
+                  {asset_allocation.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36} 
+                  iconType="circle" 
+                  wrapperStyle={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }} 
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Holdings Ledger */}
+      <div className="terminal-card overflow-hidden">
+        <div className="px-6 py-5 border-b border-card-border flex items-center justify-between bg-card/10">
+          <div className="flex items-center gap-3">
+             <LayoutGrid size={16} className="text-primary" />
+             <h3 className="text-[12px] font-black text-text-primary uppercase tracking-widest">
+                Active Asset Inventory
+             </h3>
+          </div>
+          <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] bg-bg px-3 py-1 rounded border border-card-border">
+            Audited Portfolio
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-bg text-text-dim text-[10px] font-black uppercase tracking-[0.2em] border-b border-card-border">
+                <th className="px-6 py-4">Symbol</th>
+                <th className="px-6 py-4">Quantity</th>
+                <th className="px-6 py-4 text-right">Avg Cost</th>
+                <th className="px-6 py-4 text-right">Price @ Close</th>
+                <th className="px-6 py-4 text-right">Market Exposure</th>
+                <th className="px-6 py-4 text-right">Unrealized P&L</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-card-border/30">
+              {asset_allocation.map((h, i) => (
+                <tr key={i} className="hover:bg-primary/5 transition-all group">
+                  <td className="px-6 py-4 flex items-center gap-3">
+                     <div className="w-8 h-8 rounded bg-bg border border-card-border flex items-center justify-center text-[10px] font-black text-primary">
+                        {h.symbol.slice(0, 2)}
+                     </div>
+                     <span className="text-[12px] font-black text-text-primary uppercase tracking-tight">{h.symbol}</span>
+                  </td>
+                  <td className="px-6 py-4 text-[12px] font-bold text-text-secondary uppercase">{h.quantity} Units</td>
+                  <td className="px-6 py-4 text-right font-mono text-[12px] text-text-dim">₹{h.avg_buy_price.toLocaleString('en-IN')}</td>
+                  <td className="px-6 py-4 text-right font-mono text-[12px] text-text-primary">₹{h.current_price.toLocaleString('en-IN')}</td>
+                  <td className="px-6 py-4 text-right font-mono text-[12px] font-black text-text-primary">₹{h.value.toLocaleString('en-IN')}</td>
+                  <td className={`px-6 py-4 text-right`}>
+                    <div className={`text-[12px] font-black font-mono ${h.pnl >= 0 ? 'text-success' : 'text-danger'}`}>
                       {h.pnl >= 0 ? '+' : ''}₹{h.pnl.toLocaleString('en-IN')}
-                      <div className="text-[10px] font-normal opacity-70">
-                        {((h.pnl / h.cost) * 100).toFixed(2)}%
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {asset_allocation.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-[#787b86] italic">
-                      No active holdings discovered for this portfolio.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                    <div className="text-[9px] font-bold text-text-dim uppercase tracking-tighter">
+                      {((h.pnl / h.cost) * 100).toFixed(2)}% ROI
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {asset_allocation.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="px-6 py-20 text-center flex flex-col items-center gap-4 opacity-30">
+                    <Activity size={48} />
+                    <span className="text-xs font-black uppercase tracking-[0.2em]">No Portfolio Data Synthesized</span>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

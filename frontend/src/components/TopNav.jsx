@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BarChart3,
   BookOpen,
   BrainCircuit,
-  Bell,
   LogOut,
   Search,
-  Settings,
   Activity,
+  Globe,
+  ChevronDown,
+  User
 } from 'lucide-react';
 
 const tabs = [
@@ -18,60 +19,101 @@ const tabs = [
 ];
 
 export default function TopNav({ activeTab, setActiveTab, user, onLogout }) {
-  const initial = user?.email?.[0]?.toUpperCase() || 'U';
+  const [searchFocused, setSearchFocused] = useState(false);
 
   return (
-    <nav className="h-14 flex items-center justify-between px-6 bg-[#131722] border-b border-[#2a2e39] shrink-0 z-50 select-none">
-      {/* Left: Logo */}
-      <div className="w-[30%] flex items-center justify-start">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('terminal')}>
-          <div className="w-8 h-8 rounded bg-[#2962ff] flex items-center justify-center">
-            <BarChart3 size={16} className="text-white" />
+    <nav className="h-16 flex items-center justify-between px-6 bg-bg border-b border-card-border shrink-0 z-50 select-none shadow-terminal">
+      {/* Left: Logo & Search */}
+      <div className="flex items-center gap-8 w-1/3">
+        <div 
+          className="flex items-center gap-2.5 cursor-pointer group" 
+          onClick={() => setActiveTab('terminal')}
+        >
+          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+            <BarChart3 size={18} className="text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[14px] font-bold tracking-wide text-[#d1d4dc]">
-              SmartFinTech
+            <span className="text-base font-bold tracking-tight text-text-primary leading-tight">
+              SmartFin
             </span>
-            <span className="text-[9px] uppercase tracking-wider text-[#787b86] font-semibold">Pro Terminal</span>
+            <span className="text-[10px] uppercase tracking-widest text-text-dim font-bold leading-none">
+              Terminal Pro
+            </span>
+          </div>
+        </div>
+
+        {/* Global Search Bar */}
+        <div className={`relative hidden xl:flex items-center transition-all duration-300 ${searchFocused ? 'w-64' : 'w-48'}`}>
+          <Search 
+            size={14} 
+            className={`absolute left-3 transition-colors ${searchFocused ? 'text-primary' : 'text-text-dim'}`} 
+          />
+          <input
+            type="text"
+            placeholder="Search symbols..."
+            className="w-full bg-card border border-card-border rounded-full py-1.5 pl-9 pr-4 text-xs text-text-primary focus:outline-none focus:border-primary/50 transition-all placeholder:text-text-dim"
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+          />
+          <div className="absolute right-3 hidden md:flex items-center gap-1">
+             <span className="text-[10px] font-bold text-text-dim bg-bg px-1 rounded border border-card-border">⌘K</span>
           </div>
         </div>
       </div>
 
-      {/* Center: Tabs */}
-      <div className="w-[40%] flex items-center justify-center gap-2">
+      {/* Center: Main Navigation */}
+      <div className="flex items-center justify-center gap-1 w-1/3">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded text-[13px] font-semibold transition-colors ${
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-md text-[13px] font-semibold transition-all group ${
               activeTab === id
-                ? 'bg-[#2962ff]/10 text-[#2962ff]'
-                : 'text-[#787b86] hover:text-[#d1d4dc] hover:bg-[#2a2e39]/50'
+                ? 'text-primary bg-primary/5'
+                : 'text-text-secondary hover:text-text-primary hover:bg-card-border/30'
             }`}
           >
-            <Icon size={14} className={activeTab === id ? 'text-[#2962ff]' : 'text-[#787b86]'} />
+            <Icon size={14} className={activeTab === id ? 'text-primary' : 'text-text-dim group-hover:text-text-secondary'} />
             {label}
+            {activeTab === id && (
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-0.5 bg-primary rounded-full" />
+            )}
           </button>
         ))}
       </div>
 
-      {/* Right: Actions */}
-      <div className="w-[30%] flex items-center justify-end gap-3">
-        <div className="flex flex-col items-end hidden sm:flex">
-          <span className="text-[12px] font-medium text-[#d1d4dc]">
-            {user?.email.split('@')[0]}
-          </span>
+      {/* Right: Actions & Profile */}
+      <div className="flex items-center justify-end gap-4 w-1/3">
+        <div className="hidden md:flex items-center gap-2 text-text-dim hover:text-text-secondary cursor-pointer transition-colors">
+          <Globe size={14} />
+          <span className="text-[11px] font-bold uppercase tracking-wider">Live Market</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
         </div>
-        <div className="w-8 h-8 rounded bg-[#1e222d] border border-[#2a2e39] flex items-center justify-center text-[13px] font-bold text-[#d1d4dc]">
-          {initial}
+
+        <div className="h-8 w-px bg-card-border mx-1" />
+
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end">
+            <span className="text-xs font-bold text-text-primary">
+              {user?.email.split('@')[0]}
+            </span>
+            <span className="text-[10px] font-medium text-text-dim">Institutional</span>
+          </div>
+          
+          <div className="relative group cursor-pointer">
+            <div className="w-9 h-9 rounded-full bg-card border border-card-border flex items-center justify-center hover:border-primary transition-colors overflow-hidden">
+               <User size={18} className="text-text-secondary" />
+            </div>
+          </div>
+
+          <button
+            onClick={onLogout}
+            title="Sign out"
+            className="p-2 rounded-full border border-card-border text-text-dim hover:text-danger hover:bg-danger/5 hover:border-danger/20 transition-all active:scale-90"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
-        <button
-          onClick={onLogout}
-          title="Sign out"
-          className="p-1.5 rounded text-[#787b86] hover:text-[#f23645] hover:bg-[#f23645]/10 transition-colors"
-        >
-          <LogOut size={16} />
-        </button>
       </div>
     </nav>
   );

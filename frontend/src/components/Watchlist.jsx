@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, TrendingUp, TrendingDown, Search } from 'lucide-react';
+import { Star, TrendingUp, TrendingDown, Search, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
 import { tradingAPI } from '../api';
 
 const MOCK_WATCHLIST = [
@@ -14,8 +14,6 @@ const MOCK_WATCHLIST = [
   { symbol: 'V', name: 'Visa Inc.' },
   { symbol: 'BTC-USD', name: 'Bitcoin USD' },
 ];
-
-const DEMO_SYMBOLS = ['INFY', 'TCS', 'RELIANCE', 'HDFCBANK', 'ITC'];
 
 const BASE_WATCHLIST = [
   { symbol: 'INFY', name: 'Infosys Ltd.' },
@@ -33,9 +31,9 @@ export default function Watchlist({ activeSymbol, onSelect }) {
   useEffect(() => {
     let _mounted = true;
     
-    // Fallback static entries for symbols not in our live market data feed (US stocks)
+    // Initialize with fallback prices
     const initPrices = {};
-    [...MOCK_WATCHLIST, ...BASE_WATCHLIST].forEach(item => {
+    [...BASE_WATCHLIST, ...MOCK_WATCHLIST].forEach(item => {
       initPrices[item.symbol] = { 
         price: { AAPL: 170, GOOGL: 140, MSFT: 370, TSLA: 245, AMZN: 175, NVDA: 480, META: 350, JPM: 170, V: 260, 'BTC-USD': 42000 }[item.symbol] || 100, 
         pct: 0 
@@ -54,11 +52,10 @@ export default function Watchlist({ activeSymbol, onSelect }) {
         res.data.prices.forEach(p => {
           if (!p) return;
           
-          // Trigger a color flash if price went up or down compared to local state
           setPrices(current => {
             const oldp = current[p.symbol]?.price;
-            if (oldp && p.price > oldp) newFlashes[p.symbol] = 'bg-gain/20';
-            else if (oldp && p.price < oldp) newFlashes[p.symbol] = 'bg-loss/20';
+            if (oldp && p.price > oldp) newFlashes[p.symbol] = 'text-success';
+            else if (oldp && p.price < oldp) newFlashes[p.symbol] = 'text-danger';
             return current;
           });
           
@@ -72,7 +69,7 @@ export default function Watchlist({ activeSymbol, onSelect }) {
         
         if (Object.keys(newFlashes).length > 0) {
           setFlashes(newFlashes);
-          setTimeout(() => { if (_mounted) setFlashes({}) }, 300); // Clear flash after 300ms
+          setTimeout(() => { if (_mounted) setFlashes({}) }, 800);
         }
         
       } catch (err) {
@@ -85,9 +82,7 @@ export default function Watchlist({ activeSymbol, onSelect }) {
     return () => { _mounted = false; clearInterval(interval); };
   }, []);
 
-  // Display India live stocks first, then US mock stocks
   const combinedList = [...BASE_WATCHLIST, ...MOCK_WATCHLIST];
-
   const filtered = combinedList.filter(
     (s) =>
       s.symbol.toLowerCase().includes(search.toLowerCase()) ||
@@ -95,61 +90,86 @@ export default function Watchlist({ activeSymbol, onSelect }) {
   );
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-terminal-border">
-        <h2 className="text-sm font-bold tracking-wide text-terminal-text mb-3">
-          Watchlist
-        </h2>
-        <div className="relative flex items-center">
-          <Search size={14} className="absolute left-3 text-terminal-text-dim pointer-events-none" />
+    <div className="flex flex-col h-full bg-bg border-r border-card-border">
+      {/* Sidebar Header */}
+      <div className="p-4 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-dim flex items-center gap-2">
+            <Activity size={12} className="text-primary" />
+            Market Watch
+          </h3>
+          <div className="flex items-center gap-1">
+             <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+             <span className="text-[9px] font-bold text-success uppercase">Live</span>
+          </div>
+        </div>
+
+        <div className="relative group">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search symbols..."
-            className="w-full bg-terminal-bg border border-terminal-border rounded py-2 pl-9 pr-3 text-xs text-terminal-text placeholder-terminal-text-muted focus:outline-none focus:border-accent-blue/50 focus:ring-1 focus:ring-accent-blue/50 transition-all"
+            placeholder="Search Symbols..."
+            className="w-full bg-card border border-card-border rounded py-2 pl-9 pr-3 text-[11px] font-bold uppercase tracking-wider text-text-primary placeholder:text-text-dim focus:outline-none focus:border-primary/40 transition-all"
           />
         </div>
       </div>
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto">
-        {filtered.map((item) => {
-          const data = prices[item.symbol] || { price: 0, pct: 0 };
-          const isPositive = data.pct >= 0;
-          const isActive = item.symbol === activeSymbol;
-          const flashClass = flashes[item.symbol] || '';
-          
-          return (
-            <button
-              key={item.symbol}
-              onClick={() => onSelect(item.symbol)}
-              className={`w-full flex items-center justify-between px-4 py-3 text-left transition-all duration-300 border-l-2 ${
-                isActive
-                  ? 'bg-terminal-card border-accent-blue'
-                  : 'border-transparent hover:bg-terminal-border/50'
-              } ${flashClass}`}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <Star size={14} className={`shrink-0 ${isActive ? 'text-accent-blue fill-accent-blue/20 drop-shadow-[0_0_8px_rgba(41,98,255,0.5)]' : 'text-terminal-text-dim hover:text-terminal-text-muted transition-colors'}`} />
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate tracking-tight">{item.symbol}</div>
-                  <div className="text-xs text-terminal-text-muted truncate">{item.name}</div>
+      {/* List Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="px-2 pb-4 flex flex-col gap-0.5">
+          {filtered.map((item) => {
+            const data = prices[item.symbol] || { price: 0, pct: 0 };
+            const isPositive = data.pct >= 0;
+            const isActive = item.symbol === activeSymbol;
+            const flashClass = flashes[item.symbol] || '';
+            
+            return (
+              <button
+                key={item.symbol}
+                onClick={() => onSelect(item.symbol)}
+                className={`w-full flex items-center justify-between p-3 rounded-md transition-all group relative overflow-hidden ${
+                  isActive
+                    ? 'bg-primary/10 border border-primary/20 shadow-lg shadow-primary/5'
+                    : 'hover:bg-card border border-transparent'
+                }`}
+              >
+                {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
+                
+                <div className="flex flex-col items-start min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[12px] font-black tracking-tight ${isActive ? 'text-primary' : 'text-text-primary'}`}>
+                      {item.symbol}
+                    </span>
+                    {isActive && <div className="w-1 h-1 rounded-full bg-primary animate-ping" />}
+                  </div>
+                  <span className="text-[10px] text-text-dim truncate max-w-[120px] font-medium uppercase tracking-tighter">
+                    {item.name}
+                  </span>
                 </div>
-              </div>
-              <div className="text-right shrink-0 ml-2">
-                <div className="text-sm font-mono font-medium tracking-tight">
-                  {data.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+
+                <div className="flex flex-col items-end shrink-0">
+                  <span className={`text-[12px] font-bold font-mono transition-colors duration-500 ${flashClass || (isActive ? 'text-text-primary' : 'text-text-primary')}`}>
+                    {data.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                  <div className={`flex items-center gap-1 text-[10px] font-black ${isPositive ? 'text-success' : 'text-danger'}`}>
+                    {isPositive ? <ArrowUpRight size={10} strokeWidth={3} /> : <ArrowDownRight size={10} strokeWidth={3} />}
+                    {isPositive ? '+' : ''}{data.pct.toFixed(2)}%
+                  </div>
                 </div>
-                <div className={`flex items-center gap-0.5 justify-end text-[11px] font-mono mt-0.5 font-medium ${isPositive ? 'text-gain' : 'text-loss'}`}>
-                  {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                  {isPositive ? '+' : ''}{data.pct.toFixed(2)}%
-                </div>
-              </div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Footer Info */}
+      <div className="p-3 bg-card/10 border-t border-card-border">
+         <div className="flex items-center justify-between text-[10px] font-bold text-text-dim uppercase tracking-widest">
+            <span>Market Hours</span>
+            <span className="text-text-secondary">09:15 - 15:30</span>
+         </div>
       </div>
     </div>
   );

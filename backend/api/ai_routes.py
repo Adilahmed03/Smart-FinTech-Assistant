@@ -20,7 +20,7 @@ class PortfolioAnalysisRequest(BaseModel):
 @router.post("/chat")
 async def ai_chat(req: ChatRequest):
     """Chat with the AI financial advisor."""
-    cache_key = f"ai:chat:{hash(req.message)}"
+    cache_key = f"ai:chat:{str(hash(req.message))}"
     redis = await get_redis()
 
     # Check cache

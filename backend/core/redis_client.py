@@ -16,6 +16,10 @@ class MockRedis:
         self.data[key] = value
         return True
     
+    async def setex(self, key, time, value):
+        self.data[key] = value
+        return True
+    
     async def delete(self, key):
         if key in self.data:
             del self.data[key]
