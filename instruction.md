@@ -1,79 +1,76 @@
-# Smart FinTech Assistant: Project Progress & Instructions
+# Smart FinTech Assistant: Technical Deep-Dive
 
-This document outlines the detailed development phases completed for the Smart FinTech Assistant, a professional institutional-grade trading terminal.
-
-## Project Overview
-A full-stack financial platform featuring real-time market data (Yahoo Finance), paper trading execution, AI-powered portfolio insights (Gemini), and a premium TradingView-style interface.
+This document provides a comprehensive technical overview of the Smart FinTech Assistant for developers and architects.
 
 ---
 
-## Completed Phases
+## 🏗 Project Architecture
 
-### Phase 1: Project Scaffolding
-- **Frontend**: Initialized React (Vite) with Tailwind CSS.
-- **Backend**: Set up FastAPI structure with modular routing (`api/`, `core/`, `services/`, `models/`).
-- **DevOps**: Established `.env` configuration and basic dependency management.
+The application follows a modular **Client-Server** architecture designed for high performance and scalability.
 
-### Phase 2: Authentication System
-- Implemented user registration and login with hashed passwords.
-- Built session-based middleware (`SessionAuthMiddleware`) for protected routes.
-- *Note*: Currently bypassed for "Demo Mode" to allow instant access to the terminal.
-
-### Phase 3: Paper Trading Engine
-- Created Data Models: `Portfolio`, `Holding`, and `Trade`.
-- Built REST API endpoints for `BUY` and `SELL` orders.
-- Implemented logic to update cash balances and holding quantities in real-time.
-
-### Phase 4: Full Stack Integration
-- Wired React components to Backend APIs using Axios.
-- Unified the frontend terminal state with the backend database.
-
-### Phase 5 & 6: Market Data & Analytics
-- **Market Data**: Created a background service to broadcast asset prices.
-- **Analytics**: Built services to calculate portfolio performance metrics (Daily Change, ROI, P&L).
-
-### Phase 7: AI Portfolio Insights
-- **Gemini Integration**: Built `ai_insight_service.py` to generate professional market commentary.
-- **Contextual Prompts**: The AI specifically analyzes the user's actual holdings to provide tailored advice.
-
-### Phase 8: Premium UI Transformation
-- **Institutional Aesthetic**: Migrated from a "neon/noisy" design to a strict TradingView color palette (`#131722`, `#1e222d`).
-- **Lightweight Charts**: Integrated the industry-standard `lightweight-charts` library for high-performance candlestick rendering.
-- **Centering**: Refactored navigation to ensure perfect mathematical centering of tabs.
-
-### Phase 9: Real-World Data Integration
-- **Yahoo Finance**: Swapped simulated data for real-world prices using `yfinance`.
-- **Global Triggers**: Implemented a `refreshTrigger` system where placing a trade instantly updates the entire UI (Portfolio, History, and Chart Markers) without a page reload.
-
-### Phase 10: Institutional UI Polish (Refining Standard)
-- **Grid Stability**: Implemented fixed fractional widths (`w-[30%]`, `w-[40%]`) in the Top Navbar to prevent element overlap on different monitor sizes.
-- **Noise Reduction**: Purged all unprofessional glows, animated pulses, and heavy background textures.
-
-### Phase 11: Deployment & Health Stabilization
-- **API Reliability**: Fixed critical `NameError` bugs in the market data thread.
-- **Network Hosting**: Ported the development server to bind to `0.0.0.0`, ensuring connectivity across network interfaces.
-- **Final Verification**: Confirmed real-time price volatility and successful end-to-end synchronization.
-
-### Phase 12: Portfolio Analytics (Recharts)
-- **Visual Insights**: Integrated `recharts` to provide high-fidelity Area Charts (Account Value Trend), Pie Charts (Asset Allocation), and Bar Charts (P&L Momentum).
-- **Historical Tracking**: Implemented a backend service to record portfolio valuation snapshots after every trade, enabling time-series performance analysis.
-
-### Phase 14: UI Consolidation & Terminal Resilience
-- **TopNav Cleanup**: Removed "Pro Plan" text, settings, and notification icons to achieve a professional, minimal institutional aesthetic.
-- **AI Advisor Consolidation**: Merged the "Learn" and "AI" sections into a unified "AI Advisor" chat interface. Added real-time trading strategy types (Mean Reversion, Trend Following, etc.).
-- **Holdings Report**: Added a detailed, responsive table in the Analytics dashboard showing symbol-by-symbol quantity, cost, current price, and total P&L.
-- **Redis Fallback**: Implemented an "In-Memory" storage system. If the Redis server is unavailable, the backend automatically falls back to local memory so Paper Trading and Analytics remain fully functional.
+- **Frontend**: A Single Page Application (SPA) built with React and Vite. It uses a component-based architecture for UI modularity and Axios for asynchronous backend communication.
+- **Backend**: A FastAPI-based REST API that prioritizes speed and developer productivity. It utilizes asynchronous programming (`async/await`) for I/O-bound tasks like fetching market data and calling AI services.
+- **Caching/State**: A hybrid state management system using **Redis** for persistence (portfolio and trade history) and in-memory caches for volatile real-time market data.
 
 ---
 
-## Instructions for Running
-1. **Infrastructure**:
-   - Ensure **Redis** is running (optional, system will use In-Memory fallback if absent).
-2. **Backend**: 
-   - Navigate to `/backend`
-   - Run `uvicorn main:app --reload --port 8000 --host 0.0.0.0`
-3. **Frontend**:
-   - Navigate to `/frontend`
-   - Run `npm run dev -- --host 0.0.0.0`
-4. **Access**:
-   - Open [http://localhost:5173](http://localhost:5173) in your browser.
+## 📦 Backend Modules
+
+- **`api/`**: Contains the route definitions.
+  - `auth_routes.py`: Logic for user sessions and identification.
+  - `trading_routes.py`: Endpoints for executing BUY/SELL orders.
+  - `analytics_routes.py`: Serves portfolio performance metrics.
+  - `ai_routes.py`: Entry points for chat and diagnostic services.
+- **`core/`**: The brain of the backend.
+  - `config.py`: Centralized settings (Pydantic-based) and environment variable management.
+  - `gemini_client.py`: The low-level interface to the Google Generative AI SDK, featuring robust error handling and fallback logic.
+  - `redis_client.py`: Connection pooling and management for Redis/In-Memory storage.
+- **`models/`**: Domain-driven data structures.
+  - `portfolio.py`: Defines holdings, cash balances, and time-series history.
+  - `market.py`: Handles Yahoo Finance integration and background price broadcasting.
+- **`services/`**: Complex business logic.
+  - `ai_insight_service.py`: Orchestrates portfolio data and historical context to build rich, actionable prompts for the AI.
+  - `demo_service.py`: Handles automatic user and portfolio seeding for a seamless first-run experience.
+
+---
+
+## 🎨 Frontend Structure
+
+- **`components/`**: Modularized UI elements.
+  - `ChartPanel.jsx`: High-performance candlestick charts using Lightweight Charts.
+  - `PortfolioAnalytics.jsx`: Visual performance breakdown using Recharts.
+  - `AIAssistantSidebar.jsx`: Floating AI chat for quick market queries.
+- **`src/api.js`**: A centralized Axios configuration that handles environment-based routing (`VITE_API_URL`) and credential persistence.
+
+---
+
+## 🤖 AI Integration (Gemini API)
+
+The platform leverages **Google Gemini 2.5 Flash** to provide institutional-grade financial intelligence.
+
+### How it Works:
+1. **Context Building**: When a user requests an insight, the system gathers their current holdings, recent trades, and account valuation.
+2. **Prompt Engineering**: This data is injected into a structured, role-based prompt (e.g., "You are a professional financial advisor...").
+3. **Execution**: The `gemini_client` sends the prompt to the configured model.
+4. **Resilience**: The client includes specific error trapping for the Gemini Free Tier (e.g., handling `429 RESOURCE_EXHAUSTED` with user-friendly retry messages).
+
+### 🔍 Debug Endpoint: `/api/ai/debug-models`
+For developers, this endpoint provides a window into the AI service health:
+- Lists all Gemini models accessible by your API key.
+- Identifies which models support `generateContent`.
+- Performs a live, low-latency test call to verify that your `GEMINI_API_KEY` and `GEMINI_MODEL` are correctly configured.
+
+---
+
+## 🔐 Environment Variables
+
+- `GEMINI_API_KEY`: Required for AI features. Found in Google AI Studio.
+- `GEMINI_MODEL`: Defaults to `models/gemini-2.5-flash`.
+- `VITE_API_URL`: (Frontend) The URL of the backend API for cross-origin production requests.
+- `REDIS_URL`: The path to your Redis instance. If left blank or incorrect, the system automatically falls back to **In-Memory** mode for a zero-config setup.
+- `SECRET_KEY`: Used to sign session cookies.
+
+---
+
+## 🛠 Feature Logic: Terminal Intelligence
+The "Terminal Intelligence" feature uses real-time market sentiment analysis. It takes the current active chart symbol and queries Gemini for a "Quick Logic" assessment, helping users make data-driven decisions during high-volatility events.
