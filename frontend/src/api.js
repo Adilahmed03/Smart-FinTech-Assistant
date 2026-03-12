@@ -51,8 +51,9 @@ export const tradingAPI = {
 // ── Learning ────────────────────────────────────────────────────────────────
 
 export const learningAPI = {
-  getCourses: () => api.get('/learning/courses'),
-  getCourse: (id) => api.get(`/learning/courses/${id}`),
+  getLessons: () => api.get('/learning/lessons'),
+  getLesson: (id) => api.get(`/learning/lesson/${id}`),
+  submitQuiz: (lessonId, answers) => api.post('/learning/quiz', { lesson_id: lessonId, answers }),
 };
 
 // ── AI ──────────────────────────────────────────────────────────────────────

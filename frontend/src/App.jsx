@@ -88,6 +88,7 @@ function AppContent() {
       )}
 
       {activeTab === 'analytics' && <PortfolioAnalytics refreshTrigger={refreshKey} />}
+      {activeTab === 'learning' && <LearningModule />}
       {activeTab === 'ai' && <AIInsights symbol={activeSymbol} />}
     </div>
   );

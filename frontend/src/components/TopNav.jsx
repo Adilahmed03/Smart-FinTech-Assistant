@@ -13,6 +13,7 @@ import {
 const tabs = [
   { id: 'terminal', label: 'Terminal', icon: BarChart3 },
   { id: 'analytics', label: 'Analytics', icon: Activity },
+  { id: 'learning', label: 'Learning', icon: BookOpen },
   { id: 'ai', label: 'AI Advisor', icon: BrainCircuit },
 ];
 
