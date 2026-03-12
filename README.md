@@ -39,6 +39,9 @@ cp .env.example .env
 # Edit .env and add your GEMINI_API_KEY
 ```
 
+> [!IMPORTANT]
+> Never commit your `.env` file to Git. The `.gitignore` file is configured to prevent this.
+
 ### 2. Frontend
 
 ```bash

@@ -10,6 +10,7 @@ import TradeHistory from './components/TradeHistory';
 import LearningModule from './components/LearningModule';
 import AIInsights from './components/AIInsights';
 import PortfolioAnalytics from './components/PortfolioAnalytics';
+import AIAssistantSidebar from './components/AIAssistantSidebar';
 
 function AppContent() {
   const { user, loading, logout } = useAuth();
@@ -99,7 +100,12 @@ function AppContent() {
                     onTrade={handleTradeExecuted} 
                   />
                 ) : (
-                  <PortfolioPanel refreshTrigger={refreshKey} />
+                  <div className="flex flex-col h-full overflow-hidden">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                       <PortfolioPanel refreshTrigger={refreshKey} />
+                    </div>
+                    <AIAssistantSidebar symbol={activeSymbol} />
+                  </div>
                 )}
               </div>
             </aside>
