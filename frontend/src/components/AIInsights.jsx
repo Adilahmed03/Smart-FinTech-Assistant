@@ -1,204 +1,161 @@
-import React, { useState } from 'react';
-import { BrainCircuit, Send, Sparkles, TrendingUp, AlertTriangle, Lightbulb, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  BrainCircuit, 
+  Send, 
+  Loader2, 
+  TrendingUp, 
+  ShieldAlert, 
+  Zap, 
+  Target,
+  LineChart,
+  MessageSquare
+} from 'lucide-react';
+import { aiAPI } from '../api';
 
-const PRESET_INSIGHTS = [
-  {
-    type: 'bullish',
+const STRATEGIES = [
+  { 
+    name: 'Mean Reversion', 
+    desc: 'Buying oversold assets expecting a return to average price.', 
+    icon: LineChart,
+    color: 'text-[#2962ff]'
+  },
+  { 
+    name: 'Trend Following', 
+    desc: 'Capitalizing on sustained price movements in one direction.', 
     icon: TrendingUp,
-    color: 'text-gain',
-    bg: 'border-gain/20 bg-gain/5',
-    title: 'AAPL – Bullish Momentum',
-    content: 'Apple shows strong upward momentum with the 20-day EMA crossing above the 50-day SMA. RSI at 62 indicates room for further gains. Recent earnings beat estimates by 8%, driving institutional buying. Consider entering on pullbacks to the $174-$176 support zone.',
+    color: 'text-[#089981]'
   },
-  {
-    type: 'caution',
-    icon: AlertTriangle,
-    color: 'text-yellow-400',
-    bg: 'border-yellow-400/20 bg-yellow-400/5',
-    title: 'TSLA – High Volatility Alert',
-    content: 'Tesla is experiencing elevated implied volatility (IV rank: 78%). Bollinger Bands are widening, suggesting a potential breakout. Key support at $240, resistance at $260. Consider hedging existing positions or using options strategies like iron condors.',
+  { 
+    name: 'Scalping', 
+    desc: 'Entering and exiting trades in minutes for small, quick profits.', 
+    icon: Zap,
+    color: 'text-[#ff9800]'
   },
-  {
-    type: 'insight',
-    icon: Lightbulb,
-    color: 'text-accent-cyan',
-    bg: 'border-accent-cyan/20 bg-accent-cyan/5',
-    title: 'Portfolio Risk Assessment',
-    content: 'Your portfolio is 65% tech-heavy. Consider diversifying into defensive sectors (utilities, healthcare) to reduce correlation risk. Current portfolio beta: 1.4 – above market average. A 10% correction would result in ~14% portfolio drawdown.',
-  },
+  { 
+    name: 'Arbitrage', 
+    desc: 'Simultaneous purchase and sale to profit from price differences.', 
+    icon: Target,
+    color: 'text-[#9c27b0]'
+  }
 ];
 
 export default function AIInsights({ symbol }) {
-  const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: `Hello! I'm your AI Trading Advisor. How can I help you analyze ${symbol} or discuss market strategies today?` }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = async () => {
-    if (!query.trim()) return;
-    const userMsg = { role: 'user', content: query };
-    setMessages((prev) => [...prev, userMsg]);
-    setQuery('');
-    setIsLoading(true);
+    if (!input.trim() || loading) return;
 
-    // Mock AI response (will be replaced with actual Gemini API call)
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: `Based on my analysis of ${symbol || 'the market'}: The current technical indicators suggest a consolidation phase. Key levels to watch are the 200-day moving average and the recent swing high. Volume has been declining, which typically precedes a significant price move. I recommend monitoring the RSI divergence for early entry signals.`,
-        },
-      ]);
-      setIsLoading(false);
-    }, 1500);
+    const userMsg = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const res = await aiAPI.getChatResponse(input, symbol);
+      setMessages(prev => [...prev, { role: 'assistant', content: res.data.response || res.data.content }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error processing your request." }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex-1 overflow-hidden bg-[#131722] flex">
-      {/* Left – Preset Insights */}
-      <div className="w-[420px] border-r border-[#2a2e39] bg-[#1e222d]/50 overflow-y-auto p-6 z-10 flex flex-col gap-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-[#2962ff] flex items-center justify-center">
-            <Sparkles size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-[#d1d4dc] tracking-tight">Market Intelligence</h2>
-            <p className="text-xs text-[#787b86]">AI-curated signals & alerts</p>
-          </div>
+    <div className="flex-1 flex overflow-hidden bg-[#131722]">
+      {/* Left Column: Strategy Library */}
+      <div className="w-80 border-r border-[#2a2e39] bg-[#1e222d]/30 flex flex-col hidden lg:flex">
+        <div className="p-6 border-b border-[#2a2e39]">
+          <h2 className="text-[14px] font-bold text-[#d1d4dc] flex items-center gap-2">
+            <Target size={16} className="text-[#2962ff]" />
+            Market Strategies
+          </h2>
+          <p className="text-[11px] text-[#787b86] mt-1">Real-time approach methodologies</p>
         </div>
-        
-        <div className="space-y-4">
-          {PRESET_INSIGHTS.map((insight, i) => {
-            const Icon = insight.icon;
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {STRATEGIES.map((s, i) => {
+            const Icon = s.icon;
             return (
-              <div
-                key={i}
-                className={`rounded border p-5 bg-[#1e222d] transition-colors cursor-pointer group ${
-                  insight.type === 'bullish' ? 'border-[#089981]/30 hover:border-[#089981]' :
-                  insight.type === 'caution' ? 'border-[#f5a623]/30 hover:border-[#f5a623]' :
-                  'border-[#2962ff]/30 hover:border-[#2962ff]'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded flex items-center justify-center ${insight.type === 'bullish' ? 'bg-[#089981]/10' : insight.type === 'caution' ? 'bg-[#f5a623]/10' : 'bg-[#2962ff]/10'}`}>
-                      <Icon size={16} className={insight.type === 'bullish' ? 'text-[#089981]' : insight.type === 'caution' ? 'text-[#f5a623]' : 'text-[#2962ff]'} />
-                    </div>
-                    <span className={`text-sm font-bold ${insight.type === 'bullish' ? 'text-[#089981]' : insight.type === 'caution' ? 'text-[#f5a623]' : 'text-[#2962ff]'}`}>{insight.title}</span>
-                  </div>
+              <div key={i} className="p-4 rounded border border-[#2a2e39] bg-[#1e222d] hover:border-[#434651] transition-colors cursor-pointer group">
+                <div className="flex items-center gap-3 mb-2">
+                  <Icon size={14} className={s.color} />
+                  <span className="text-[12px] font-bold text-[#d1d4dc] group-hover:text-[#2962ff]">{s.name}</span>
                 </div>
-                <p className="text-[13px] text-[#b2b5be] leading-relaxed">{insight.content}</p>
+                <p className="text-[11px] text-[#787b86] leading-relaxed">{s.desc}</p>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Right – Chat Interface */}
-      <div className="flex-1 flex flex-col z-10 bg-[#131722]">
+      {/* Main Column: Chat Area */}
+      <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-        <div className="flex items-center gap-4 px-6 py-4 border-b border-[#2a2e39] bg-[#1e222d] shrink-0">
-          <div className="w-10 h-10 rounded bg-[#2962ff] flex items-center justify-center">
-            <BrainCircuit size={18} className="text-white" />
-          </div>
-          <div>
-            <div className="text-sm font-bold text-[#d1d4dc]">Gemini Financial Analyst</div>
-            <div className="flex items-center gap-2 text-[11px] text-[#787b86]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#089981]" />
-              Online & Monitoring Markets
+        <div className="h-14 border-b border-[#2a2e39] flex items-center justify-between px-6 bg-[#131722]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-[#2962ff]/10 flex items-center justify-center">
+              <BrainCircuit size={18} className="text-[#2962ff]" />
+            </div>
+            <div>
+              <span className="text-[13px] font-bold text-[#d1d4dc]">AI Advisor</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#089981] animate-pulse" />
+                <span className="text-[10px] text-[#787b86] uppercase font-bold tracking-widest">Active Insight Engine</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center max-w-lg mx-auto">
-              <div className="w-20 h-20 rounded bg-[#1e222d] border border-[#2a2e39] flex items-center justify-center mb-6">
-                <BrainCircuit size={40} className="text-[#2962ff]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#d1d4dc] mb-2">Ask your AI Co-Pilot</h3>
-              <p className="text-sm text-[#787b86] leading-relaxed mb-8">
-                I can analyze real-time technicals, summarize earnings calls, evaluate portfolio risk, or explain complex trading strategies.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                {['Analyze AAPL technicals', 'Best defensive sectors?', 'Explain RSI divergence', 'Hedge TSLA volatility'].map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => { setQuery(q); }}
-                    className="px-4 py-3 text-xs font-medium rounded border border-[#2a2e39] bg-[#1e222d] text-[#b2b5be] hover:text-[#d1d4dc] hover:border-[#2962ff] transition-colors text-left flex items-center justify-between group"
-                  >
-                    {q}
-                    <TrendingUp size={14} className="opacity-0 group-hover:opacity-100 text-[#2962ff] transition-opacity" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`flex gap-3 max-w-[80%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                {msg.role === 'assistant' && (
-                   <div className="w-8 h-8 rounded bg-[#2962ff] flex-shrink-0 flex items-center justify-center mt-1">
-                     <BrainCircuit size={14} className="text-white" />
-                   </div>
-                )}
-                <div
-                  className={`rounded px-5 py-3.5 text-[13px] leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-[#2962ff] text-white'
-                      : 'bg-[#1e222d] text-[#d1d4dc] border border-[#2a2e39]'
-                  }`}
-                >
-                  {msg.content}
-                </div>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-lg p-4 text-[13px] leading-relaxed ${
+                m.role === 'user' 
+                ? 'bg-[#2962ff] text-white' 
+                : 'bg-[#1e222d] border border-[#2a2e39] text-[#d1d4dc]'
+              }`}>
+                {m.content}
               </div>
             </div>
           ))}
-
-          {isLoading && (
+          {loading && (
             <div className="flex justify-start">
-               <div className="flex gap-3 max-w-[80%] flex-row">
-                 <div className="w-8 h-8 rounded bg-[#2962ff] flex-shrink-0 flex items-center justify-center mt-1">
-                   <BrainCircuit size={14} className="text-white" />
-                 </div>
-                 <div className="bg-[#1e222d] border border-[#2a2e39] rounded px-5 py-3.5 flex items-center gap-2">
-                   <div className="flex gap-1.5">
-                     <span className="w-1.5 h-1.5 bg-[#787b86] rounded-full animate-pulse" />
-                     <span className="w-1.5 h-1.5 bg-[#787b86] rounded-full animate-pulse delay-75" />
-                     <span className="w-1.5 h-1.5 bg-[#787b86] rounded-full animate-pulse delay-150" />
-                   </div>
-                 </div>
-               </div>
+              <div className="bg-[#1e222d] border border-[#2a2e39] rounded-lg p-4 flex items-center gap-3 shadow-lg">
+                <Loader2 className="animate-spin text-[#2962ff]" size={16} />
+                <span className="text-[12px] text-[#787b86] italic">AI is analyzing {symbol}...</span>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Input */}
-        <div className="p-6 bg-[#1e222d] border-t border-[#2a2e39] shrink-0">
-          <div className="flex items-center gap-3 bg-[#131722] border border-[#2a2e39] rounded p-2 focus-within:border-[#2962ff] transition-colors">
+        {/* Input Area */}
+        <div className="p-6 border-t border-[#2a2e39] bg-[#1e222d]/20">
+          <div className="max-w-4xl mx-auto relative">
             <input
               type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask the AI co-pilot a question..."
-              className="flex-1 bg-transparent py-2 px-4 text-[13px] text-[#d1d4dc] placeholder-[#787b86] focus:outline-none"
+              placeholder={`Ask the AI about ${symbol} or trading strategies...`}
+              className="w-full bg-[#131722] border border-[#363a45] rounded-lg py-3 pl-4 pr-12 text-[13px] text-[#d1d4dc] focus:outline-none focus:border-[#2962ff] transition-colors"
             />
-            <button
+            <button 
               onClick={handleSend}
-              disabled={!query.trim()}
-              className="p-3 rounded bg-[#2962ff] text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-[#2962ff]"
+              className="absolute right-2 top-1.5 p-1.5 text-[#787b86] hover:text-[#2962ff] transition-colors"
             >
-              <Send size={16} />
+              <Send size={18} />
             </button>
-          </div>
-          <div className="text-center mt-3 text-[10px] text-[#787b86]">
-             AI insights are algorithmically generated and do not constitute financial advice.
           </div>
         </div>
       </div>

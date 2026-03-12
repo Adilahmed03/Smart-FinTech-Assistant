@@ -45,6 +45,7 @@ export const tradingAPI = {
   getMarketPrices: () => api.get('/market/prices'),
   getMarketHistory: (symbol, period = '1mo', interval = '1d') => 
     api.get(`/market/history/${symbol}`, { params: { period, interval } }),
+  getAnalytics: () => api.get('/portfolio/analytics'),
 };
 
 // ── Learning ────────────────────────────────────────────────────────────────

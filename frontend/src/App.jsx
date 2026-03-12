@@ -9,6 +9,7 @@ import PortfolioPanel from './components/PortfolioPanel';
 import TradeHistory from './components/TradeHistory';
 import LearningModule from './components/LearningModule';
 import AIInsights from './components/AIInsights';
+import PortfolioAnalytics from './components/PortfolioAnalytics';
 
 function AppContent() {
   const { user, loading, logout } = useAuth();
@@ -86,7 +87,7 @@ function AppContent() {
         </div>
       )}
 
-      {activeTab === 'learn' && <LearningModule />}
+      {activeTab === 'analytics' && <PortfolioAnalytics refreshTrigger={refreshKey} />}
       {activeTab === 'ai' && <AIInsights symbol={activeSymbol} />}
     </div>
   );

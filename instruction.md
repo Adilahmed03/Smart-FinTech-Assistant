@@ -54,14 +54,26 @@ A full-stack financial platform featuring real-time market data (Yahoo Finance),
 - **Network Hosting**: Ported the development server to bind to `0.0.0.0`, ensuring connectivity across network interfaces.
 - **Final Verification**: Confirmed real-time price volatility and successful end-to-end synchronization.
 
+### Phase 12: Portfolio Analytics (Recharts)
+- **Visual Insights**: Integrated `recharts` to provide high-fidelity Area Charts (Account Value Trend), Pie Charts (Asset Allocation), and Bar Charts (P&L Momentum).
+- **Historical Tracking**: Implemented a backend service to record portfolio valuation snapshots after every trade, enabling time-series performance analysis.
+
+### Phase 14: UI Consolidation & Terminal Resilience
+- **TopNav Cleanup**: Removed "Pro Plan" text, settings, and notification icons to achieve a professional, minimal institutional aesthetic.
+- **AI Advisor Consolidation**: Merged the "Learn" and "AI" sections into a unified "AI Advisor" chat interface. Added real-time trading strategy types (Mean Reversion, Trend Following, etc.).
+- **Holdings Report**: Added a detailed, responsive table in the Analytics dashboard showing symbol-by-symbol quantity, cost, current price, and total P&L.
+- **Redis Fallback**: Implemented an "In-Memory" storage system. If the Redis server is unavailable, the backend automatically falls back to local memory so Paper Trading and Analytics remain fully functional.
+
 ---
 
 ## Instructions for Running
-1. **Backend**: 
+1. **Infrastructure**:
+   - Ensure **Redis** is running (optional, system will use In-Memory fallback if absent).
+2. **Backend**: 
    - Navigate to `/backend`
    - Run `uvicorn main:app --reload --port 8000 --host 0.0.0.0`
-2. **Frontend**:
+3. **Frontend**:
    - Navigate to `/frontend`
    - Run `npm run dev -- --host 0.0.0.0`
-3. **Access**:
+4. **Access**:
    - Open [http://localhost:5173](http://localhost:5173) in your browser.

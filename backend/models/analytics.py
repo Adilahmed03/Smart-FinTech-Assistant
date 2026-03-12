@@ -1,23 +1,13 @@
 """Portfolio analytics – compute metrics from holdings + live market prices."""
 
 from __future__ import annotations
+import time
 from models.portfolio import Portfolio
 from models.market import get_price, SUPPORTED_SYMBOLS
 
 
-def compute_analytics(portfolio: Portfolio) -> dict:
-    """Return a full analytics snapshot for the given portfolio.
-
-    Metrics
-    -------
-    portfolio_value        sum(qty × current_price) + cash
-    invested_amount        sum(qty × avg_buy_price)
-    profit_loss            portfolio_value − invested_amount − cash  (holdings-only P&L)
-    return_percentage      (profit_loss / invested_amount) × 100
-    asset_allocation       [{ symbol, value, weight }]
-    largest_position       { symbol, value, weight }
-    diversification_score  1 − HHI  (0 = concentrated, 1 = perfectly spread)
-    """
+async def compute_analytics(portfolio: Portfolio) -> dict:
+    """Return a full analytics snapshot for the given portfolio."""
 
     holdings = list(portfolio.holdings.values())
     cash = portfolio.cash_balance
@@ -31,7 +21,7 @@ def compute_analytics(portfolio: Portfolio) -> dict:
         if h.quantity <= 0:
             continue
         # Try to get a live simulated price; fall back to avg_buy_price
-        market = get_price(h.symbol)
+        market = await get_price(h.symbol)
         current_price = market["price"] if market else h.avg_buy_price
 
         value = round(h.quantity * current_price, 2)
@@ -47,7 +37,7 @@ def compute_analytics(portfolio: Portfolio) -> dict:
             "value": value,
             "cost": cost,
             "pnl": round(value - cost, 2),
-            "weight": 0.0,  # filled below
+            "weight": 0.0,
         })
 
     portfolio_value = round(total_market_value + cash, 2)
@@ -55,14 +45,13 @@ def compute_analytics(portfolio: Portfolio) -> dict:
     profit_loss = round(total_market_value - invested_amount, 2)
     return_pct = round((profit_loss / invested_amount) * 100, 2) if invested_amount else 0.0
 
-    # ── Weights (as proportion of total portfolio value) ────────────────
+    # ── Weights ────────────────────────────────────────────────────────
     for item in allocation:
         item["weight"] = round((item["value"] / portfolio_value) * 100, 2) if portfolio_value else 0.0
 
-    # Sort by value descending
     allocation.sort(key=lambda x: x["value"], reverse=True)
 
-    # ── Largest position ────────────────────────────────────────────────
+    # ── Largest position ───────────────────────────────────────────────
     largest_position = None
     if allocation:
         top = allocation[0]
@@ -73,7 +62,6 @@ def compute_analytics(portfolio: Portfolio) -> dict:
         }
 
     # ── Diversification score (1 − HHI) ────────────────────────────────
-    # HHI = sum of squared weights (normalised 0-1)
     if allocation and portfolio_value:
         weights = [a["value"] / portfolio_value for a in allocation]
         hhi = sum(w ** 2 for w in weights)
@@ -91,4 +79,30 @@ def compute_analytics(portfolio: Portfolio) -> dict:
         "largest_position": largest_position,
         "diversification_score": diversification_score,
         "holdings_count": len(allocation),
+        "history": portfolio.history,
     }
+
+
+async def append_historical_snapshot(portfolio: Portfolio):
+    """Compute current valuation and append to portfolio history."""
+    holdings = list(portfolio.holdings.values())
+    cash = portfolio.cash_balance
+    total_market_value = 0.0
+
+    for h in holdings:
+        if h.quantity <= 0:
+            continue
+        market = await get_price(h.symbol)
+        current_price = market["price"] if market else h.avg_buy_price
+        total_market_value += h.quantity * current_price
+
+    portfolio_value = round(total_market_value + cash, 2)
+    snapshot = {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "value": portfolio_value,
+        "profit_loss": round(total_market_value - sum(h.quantity * h.avg_buy_price for h in holdings), 2)
+    }
+    
+    portfolio.history.append(snapshot)
+    if len(portfolio.history) > 100:
+        portfolio.history.pop(0)

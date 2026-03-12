@@ -30,4 +30,4 @@ async def portfolio_analytics(request: Request):
     """Return comprehensive portfolio analytics for the authenticated user."""
     user_id = _require_user(request)
     portfolio = await _load_portfolio(user_id)
-    return compute_analytics(portfolio)
+    return await compute_analytics(portfolio)

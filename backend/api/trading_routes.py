@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from core.redis_client import get_redis
 from models.portfolio import Portfolio, INITIAL_CASH
+from models.analytics import append_historical_snapshot
 
 router = APIRouter(prefix="/api/trade", tags=["Paper Trading"])
 
@@ -58,6 +59,7 @@ async def buy(body: TradeRequest, request: Request):
 
     try:
         trade = portfolio.buy(body.symbol.upper(), body.quantity, body.price)
+        await append_historical_snapshot(portfolio)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -91,6 +93,7 @@ async def sell(body: TradeRequest, request: Request):
 
     try:
         trade = portfolio.sell(body.symbol.upper(), body.quantity, body.price)
+        await append_historical_snapshot(portfolio)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

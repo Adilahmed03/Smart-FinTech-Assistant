@@ -48,6 +48,7 @@ class Portfolio:
     cash_balance: float = INITIAL_CASH
     holdings: dict[str, Holding] = field(default_factory=dict)
     trades: list[Trade] = field(default_factory=list)
+    history: list[dict] = field(default_factory=list)  # [{ timestamp: str, value: float }]
 
     # ── Serialisation helpers ───────────────────────────────────────────
 
@@ -61,6 +62,7 @@ class Portfolio:
                 if h.quantity > 0
             ],
             "trades": [asdict(t) for t in self.trades],
+            "history": self.history,
         }
 
     def to_json(self) -> str:
@@ -89,6 +91,7 @@ class Portfolio:
             cash_balance=data.get("cash_balance", INITIAL_CASH),
             holdings=holdings,
             trades=trades,
+            history=data.get("history", []),
         )
 
     @classmethod
