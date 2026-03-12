@@ -36,7 +36,13 @@ AI-powered trading terminal with paper trading, portfolio analytics, financial l
 ```bash
 cd smart-fintech-assistant
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
+# Edit .env and add your GEMINI_API_KEY with values like:
+# ```env
+# GEMINI_API_KEY=AIza...
+# GEMINI_MODEL=models/gemini-2.5-flash
+# REDIS_URL=redis://localhost:6379/0
+# SECRET_KEY=yoursecret
+# ```
 ```
 
 > [!IMPORTANT]
@@ -69,6 +75,26 @@ API docs at **http://localhost:8000/docs**
 # Windows (if installed via Chocolatey / Memurai)
 redis-server
 ```
+
+## 🏗️ System Architecture
+
+### 1. 5-Panel Terminal Layout
+The dashboard utilizes a high-density "Operations Hub" layout:
+- **Navigation (Top)**: Global route switcher and session management.
+- **Watchlist (Left)**: Active tracking of Indian (NSE) and Global (US/Crypto) markets.
+- **Intelligence Hub (Center)**: Real-time interactive charts with integrated interval controls.
+- **Execution & Exposure (Right)**: Vertical stack containing live order entry and portfolio inventory.
+- **Activity Log (Bottom)**: Audit trail of all buy/sell transactions.
+
+### 2. Data Flow & Persistence
+- **Communication**: Frontend (React) communicates with Backend (FastAPI) via highly-optimized asynchronous REST endpoints.
+- **Persistence**: Portfolio state and session tokens are managed in **Redis**, ensuring low-latency access and state isolation.
+- **Market Simulation**: Live prices are fetched from Yahoo Finance with a simulated **"Market Jitter"** logic to demonstrate real-time UI reactions during review.
+
+### 3. AI Neural Link
+The terminal integrates **Google Gemini 2.0 Flash** for two distinct purposes:
+- **Strategy Insights**: Deep-dive analysis of market trends and historical performance.
+- **Terminal Intelligence**: A persistent sidebar assistant that provides contextual feedback on your current holdings and risk profile.
 
 ## Project Structure
 

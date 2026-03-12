@@ -135,9 +135,30 @@ export default function AuthPage() {
                   {isLogin ? 'Establish Session' : 'Register Terminal'}
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </>
-              )}
+            )}
+          </button>
+
+          {isLogin && (
+            <button
+              type="button"
+              onClick={async () => {
+                setError('');
+                setLoading(true);
+                try {
+                  await login('demo@example.com', 'demo_password_123');
+                } catch (err) {
+                  setError('Demo environment not initialized. Please restart server.');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="w-full mt-4 h-11 flex items-center justify-center gap-3 rounded-xl border border-primary/30 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 transition-all active:scale-[0.98]"
+            >
+              <Zap size={14} className="fill-primary" />
+              Quick Access: Demo Terminal
             </button>
-          </form>
+          )}
+        </form>
 
           <div className="mt-8 flex flex-col items-center gap-4">
              <div className="text-[10px] font-bold text-text-dim uppercase tracking-widest border-t border-card-border/30 pt-6 w-full text-center">

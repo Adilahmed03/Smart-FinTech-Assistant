@@ -12,12 +12,14 @@ from api.market_routes import router as market_router
 from api.analytics_routes import router as analytics_router
 from middleware.auth_middleware import SessionAuthMiddleware
 from models.market import start_market_updater
+from services.demo_service import seed_demo_data
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     start_market_updater()
+    await seed_demo_data()
     yield
     # Shutdown
     await close_redis()
